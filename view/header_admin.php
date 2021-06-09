@@ -60,6 +60,7 @@ include '../../config/koneksi.php';
             <a href="daftarpeminjaman.php" class="w3-bar-item w3-button w3-padding"><img src="../../images/list.png" width=20>  Daftar Peminjaman</a>
             <a href="daftarpengembalian.php" class="w3-bar-item w3-button w3-padding"><img src="../../images/return.png" width="20">  Daftar Pengembalian</a>
             <a href="daftarperpanjangan.php" class="w3-bar-item w3-button w3-padding"><img src="../../images/link.png" width="20">  Daftar Perpanjangan</a>
+            <a href="daftarketerlambatan.php" class="w3-bar-item w3-button w3-padding"><img src="../../images/timer.png" width="20">  Daftar Kerlambatan</a>
             <a href="../logout.php" class="w3-bar-item w3-button w3-padding"><img src="../../images/logout.png" width="20">  Logout</a>
         </div>
     </nav>

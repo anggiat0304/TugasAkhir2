@@ -77,6 +77,7 @@
       //insert peminjaman
       $peminjaman = "INSERT INTO peminjaman (tanggal_peminjaman, expired, id_buku,id_user) VALUES ('$date', '$tgl2', '$book_id','$user_id')";
       $UDB = "UPDATE daftar_buku SET kondisi = 'dipinjam' , jlh_perpanjangan = 0 WHERE id = '$book_id'";
+      $UDA = "UPDATE anggota SET jumlah_peminjaman = +1 WHERE id = '$user_id'";
       if ($row2['tag_buku'] == $tag) {
           if ($row2['kondisi']=='free') {
               $pinjam = $koneksi->query($peminjaman);
@@ -146,6 +147,7 @@
     $peminjaman = "SELECT * FROM peminjaman WHERE id_buku = '$tag'";
     $result3 = $koneksi->query($peminjaman);
     $row3 = $result3->fetch_assoc();
+    $id_peminjaman = $row3['id'];
 
     if ($date > $row3['expired']) {
       $error = true;
@@ -156,13 +158,15 @@
     //insert peminjaman
     
     $pengembalian = "INSERT INTO pengembalian (tanggal_pengembalian,id_buku,id_user) VALUES ('$date', '$book_id','$user_id')";
-    $UDB = "UPDATE daftar_buku SET kondisi = '$kondisi' , jlh_perpanjangan = 0 WHERE id = '$book_id'";
-    
+    $UDB = "UPDATE daftar_buku SET kondisi = '$kondisi' WHERE id = '$book_id'";
+    $UDA = "UPDATE anggota SET jumlah_peminjaman = -1 WHERE id = '$user_id'";
+    $late = "INSERT INTO pengembalian (id_peminjaman) VALUES ('$id_peminjaman')";
     
     if ($row2['tag_buku'] == $tag) {
         if ($row2['kondisi']!='free') {
           if ($error == true) {
             $up = $koneksi->query($UDB);
+            $ua = $koneksi->query($UDA);
             echo "<script>
             Swal.fire({
               title: 'Status anda telah terlambat. Silahkan hubungi petugas perpustakaan Transaksi Lagi?',
@@ -181,7 +185,7 @@
           }else{
             $pinjam = $koneksi->query($pengembalian);
             $up = $koneksi->query($UDB);
-           
+            $ul = $koneksi->query($late);
             if ($pinjam == true && $up == true) {
                 echo "<script>
        
@@ -272,8 +276,8 @@
     
     $exp = "UPDATE peminjaman SET expired = '$tgl2' WHERE id_buku = '$book_id'";
     if ($row2['tag_buku'] == $tag) {
-        if ($row2['kondisi']!='free') {
-          $pinjam = $koneksi->query($perpanjangan);
+        if ($row2['kondisi']!='free' && $row2['kondisi'] != 'late') {
+           $pinjam = $koneksi->query($perpanjangan);
           $up = $koneksi->query($UDB);
           $Uexpp = $koneksi->query($exp);
             if ($pinjam == true && $up == true) {
@@ -298,7 +302,7 @@
           echo "<script>
                   
           Swal.fire({
-            title: 'Status buku telah dikembalikan.',
+            title: 'Status buku telah dikembalikan atau sudah telat.',
             showDenyButton: true,
             confirmButtonText: `Ya`,
             denyButtonText: `Tidak, terima kasih`,
