@@ -60,31 +60,52 @@
   
   
       $anggota = "SELECT * FROM anggota where id = '$user_id' ";
-      $QA = $koneksi->query($anggota);
-      $row = $QA->fetch_assoc();
+      $result3 = $koneksi->query($anggota);
+      $rows = $result3->fetch_assoc();
       
       $buku = "SELECT * FROM daftar_buku WHERE tag_buku = '$tag'";
       $result2 = $koneksi->query($buku);
       $row2 = $result2->fetch_assoc();
       $book_id = $row2['id'];
       
-      if ($row['rules'] == 'mahasiswa') {
-          $tgl2 = date('Y-m-d', strtotime('+7 days', strtotime($date)));
+      if ($rows['rules'] == 'mahasiswa') {
+        $tgl2 = date('Y-m-d', strtotime('+7 days', strtotime($date)));
       }else {
-          $tgl2 = date('Y-m-d', strtotime('+14 days', strtotime($date)));
+        $tgl2 = date('Y-m-d', strtotime('+14 days', strtotime($date)));
       }
-  
+      $jumlah_peminjaman = $rows['jlhPeminjaman'];
+      
       //insert peminjaman
       $peminjaman = "INSERT INTO peminjaman (tanggal_peminjaman, expired, id_buku,id_user) VALUES ('$date', '$tgl2', '$book_id','$user_id')";
       $UDB = "UPDATE daftar_buku SET kondisi = 'dipinjam' , jlh_perpanjangan = 0 WHERE id = '$book_id'";
-      $UDA = "UPDATE anggota SET jumlah_peminjaman = +1 WHERE id = '$user_id'";
+      $UDA = "UPDATE anggota SET jlhPeminjaman = jlhPeminjaman+1 WHERE id = '$user_id'";
       if ($row2['tag_buku'] == $tag) {
-          if ($row2['kondisi']=='free') {
-              $pinjam = $koneksi->query($peminjaman);
+       
+        if ($row2['kondisi']=='free') {
+          if ($jumlah_peminjaman >= 4) {
+            echo "<script>
+                    
+                        Swal.fire({
+                          title: 'Anda sudah diambang batas. Apakah anda ingin melakukan transaksi lagi?',
+                          showDenyButton: true,
+                          confirmButtonText: `Ya`,
+                          denyButtonText: `Tidak, terima kasih`,
+                        }).then((result) => {
+                          /* Read more about isConfirmed, isDenied below */
+                          if (result.isConfirmed) {
+                            
+                          } else if (result.isDenied) {
+                            window.location.href='../logout.php'
+                          }
+                        });
+                  </script>";
+              }else {
+                $pinjam = $koneksi->query($peminjaman);
               $up = $koneksi->query($UDB);
+              $ua = $koneksi->query($UDA);
               if ($pinjam === true && $up === true) {
                   echo "<script>
-                  
+                      
                         Swal.fire({
                           title: 'Peminjaman berhasil. Apakah anda ingin melakukan transaksi lagi?',
                           showDenyButton: true,
@@ -99,6 +120,7 @@
                           }
                         });
                   </script>";
+              }
               }
           }else {
             echo "<script>
@@ -149,43 +171,44 @@
     $row3 = $result3->fetch_assoc();
     $id_peminjaman = $row3['id'];
 
-    if ($date > $row3['expired']) {
+
+    $expired = $row3['expired'];
+    if (date_create($date) > date_create($expired)) {
       $error = true;
       $kondisi = 'late';
     }else{
+      $error = false;
       $kondisi = 'free';
     }
     //insert peminjaman
     
     $pengembalian = "INSERT INTO pengembalian (tanggal_pengembalian,id_buku,id_user) VALUES ('$date', '$book_id','$user_id')";
     $UDB = "UPDATE daftar_buku SET kondisi = '$kondisi' WHERE id = '$book_id'";
-    $UDA = "UPDATE anggota SET jumlah_peminjaman = -1 WHERE id = '$user_id'";
-    $late = "INSERT INTO pengembalian (id_peminjaman) VALUES ('$id_peminjaman')";
+    $UDA = "UPDATE anggota SET jlhPeminjaman= jlhPeminjaman-1 WHERE id = '$user_id'";
     
     if ($row2['tag_buku'] == $tag) {
         if ($row2['kondisi']!='free') {
           if ($error == true) {
             $up = $koneksi->query($UDB);
-            $ua = $koneksi->query($UDA);
             echo "<script>
             Swal.fire({
               title: 'Status anda telah terlambat. Silahkan hubungi petugas perpustakaan Transaksi Lagi?',
               showDenyButton: true,
               confirmButtonText: `Ya`,
               denyButtonText: `Tidak, Terima kasih`,
-
+              
             }).then((result) => {
-               
+              
               if (result.isConfirmed) {
-            } else if (result.isDenied) {
-                  window.location.href='../logout.php' 
+              } else if (result.isDenied) {
+                window.location.href='../logout.php' 
               }
             })
             </script>";
           }else{
             $pinjam = $koneksi->query($pengembalian);
+            $ua = $koneksi->query($UDA);
             $up = $koneksi->query($UDB);
-            $ul = $koneksi->query($late);
             if ($pinjam == true && $up == true) {
                 echo "<script>
        
