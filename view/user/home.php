@@ -263,17 +263,17 @@
     $date = date("Y-m-d");
     $anggota = "SELECT * FROM anggota where id = '$user_id' ";
     $QA = $koneksi->query($anggota);
-    $row = $QA->fetch_assoc();
+    $rows = $QA->fetch_assoc();
     
     $buku = "SELECT * FROM daftar_buku WHERE tag_buku = '$tag'";
     $result2 = $koneksi->query($buku);
     $row2 = $result2->fetch_assoc();
     $book_id = $row2['id'];
 
-    if ($row['rules'] == 'mahasiswa') {
-      $tgl2 = date('Y-m-d', strtotime('+7 days', strtotime($date)));
+    if ($rows['rules'] == 'mahasiswa') {
+      $tgl2 = date('Y-m-d', strtotime('+5 days', strtotime($date)));
     }else {
-      $tgl2 = date('Y-m-d', strtotime('+14 days', strtotime($date)));
+      $tgl2 = date('Y-m-d', strtotime('+10 days', strtotime($date)));
     }
 
     if ($row2['jlh_perpanjangan'] >= 3) {
@@ -295,15 +295,14 @@
       </script>";
     }else{
     $perpanjangan = "INSERT INTO perpanjangan (tanggal_perpanjangan,id_buku,id_user) VALUES ('$date', '$book_id','$user_id')";
-    $UDB = "UPDATE daftar_buku SET kondisi = 'diperpanjang', jlh_perpanjangan = jlh_perpanjangan + 1 WHERE id = '$book_id'";
-    
+    $UDB = "UPDATE daftar_buku SET kondisi = 'diperpanjang', jlh_perpanjangan = jlh_perpanjangan + 1 WHERE id = '$book_id'";  
     $exp = "UPDATE peminjaman SET expired = '$tgl2' WHERE id_buku = '$book_id'";
     if ($row2['tag_buku'] == $tag) {
-        if ($row2['kondisi']!='free' && $row2['kondisi'] != 'late') {
+        if ($row2['kondisi'] =='dipinjam' && $row2['kondisi'] != 'late' ) {
            $pinjam = $koneksi->query($perpanjangan);
           $up = $koneksi->query($UDB);
           $Uexpp = $koneksi->query($exp);
-            if ($pinjam == true && $up == true) {
+            if ($pinjam == true && $Uexpp == true) {
                 echo "<script>
        
                 Swal.fire({

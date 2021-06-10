@@ -49,7 +49,7 @@ include '../header_admin.php';
           $QCP = $koneksi->query($cekPeminjaman);
           $row2= $QCP->fetch_assoc();
             if ($expired > $date  ) {
-                echo "Tidak ada data";
+               
             }else {
                 $UDB = "UPDATE daftar_buku SET kondisi = 'late' WHERE id = '$book_id'";
                 $QU = $koneksi->query($UDB);
